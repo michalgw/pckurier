@@ -1,0 +1,104 @@
+<html>
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-2">
+<title>Rozmycie i wyostrzenie obrazu - sharp.asm</title>
+<meta name="author" content="Dariusz Pindraszak">
+<meta name="keywords" content="Praktycy, Asembler, softhard">
+<meta name="language" content="pl">
+<style type="text/css">
+<!--
+body {margin-left: 10mm; margin-right: 10mm}
+p {font-size: 10pt; color: #009500; font-family: Arial, sans-serif}
+pre {font-size: 12pt; color: #009500; font-family: Courier, monospaced}
+-->
+</style>
+
+</head>
+
+<body background="../../../grafika/tlopaski.gif" link="#FF0000" alink="#0000FF" vlink="#009500">
+
+<br>
+
+<pre>
+;*****************
+;*** SHARP.ASM *** 
+;*****************
+Sharp PROC 
+     mov  dx,SHARPS      ;Segment roboczy 
+     mov  es,dx 
+     mov  dx,0a000h      ;Wyostrzanie obrazu na ekranie 
+     mov  ds,dx 
+     mov  si,0 
+     mov  di,0 
+     mov  cx,64000       ;Cały ekran 
+Go: 
+     mov  bx,0           ;BX będzie sumą intensywności 
+     sub  si,321 
+     push cx 
+     mov  cx,3 
+     ;Oblicz ˙sumę ˙intensywności ˙kolorów 9 punktów (aktualny w 
+     ;środku) i odejmij intensywność koloru punktu aktualnego 
+Dodaj: 
+     lodsb 
+     cbw 
+     add  bx,ax 
+     lodsb 
+     cbw
+     add  bx,ax 
+     lodsb 
+     cbw 
+     add  bx,ax 
+     add  si,317         ;Zejdź linię niżej 
+     loop Dodaj 
+     sub  si,639 
+     lodsb 
+     cbw 
+     sub  bx,ax          ;Odejmij kolor punktu aktualnego 
+     mov  cl,3 
+     shr  bx,cl          ;Oblicz średnią arytmetyczną 
+     pop  cx 
+     ;Licz nową intensywność koloru
+     mov  al,ds:[si-1] 
+     mov  dl,al 
+     sub  al,bl 
+     add  al,dl 
+     ;Sprawdź czy kolor "nie przeszedł" zakresu
+     cmp  al,64 
+     jb   Ok3 
+     cmp  al,128 
+     jb   Ok1 
+     mov  al,0 
+     jmp  Ok3 
+Ok1: 
+     mov  al,63 
+Ok3: 
+     stosb 
+     loop Go 
+     ;Rysuj nowy obraz 
+     mov  si,0 
+     mov  di,0 
+     mov  cx,32000 
+     mov  dx,ds 
+     mov  bx,es 
+     mov  ds,bx 
+     mov  es,dx 
+     rep  movsw 
+     ret 
+     ENDP 
+SHARPS SEGMENT      ;Segment roboczy dla procedury SHARP
+Tab  dw 32000 dup(0) 
+SHARPS ENDS 
+</pre>
+
+<img src="../../../grafika/line.gif" vspace="5" width="100%" height="4">
+
+<p align=center>
+  Stronę opracował
+  <a href="mailto: praktycy@pckurier.pl?Subject=Uwagi do: Rozmycie i wyostrzenie obrazu - sharp.asm"><em>Michał Szulowski</em></a>
+</p>
+
+</body>
+
+</html>
